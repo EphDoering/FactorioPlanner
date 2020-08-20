@@ -1,1 +1,19 @@
- 
+ #dragOrder{
+     --y-offset:20px;
+     border-spacing: 0;
+     /* border-collapse: collapse; */
+ }
+ #dragOrder td, #dragOrder th{
+     border: solid lightgrey 1px;
+ }
+ #dragOrder td{
+     border-left-width: 0;
+ }
+ #dragOrder .dragging{
+     transform: translate(15px,var(--y-offset));
+     background: white;
+ }
+svg {
+  fill: currentColor;
+  pointer-events:none;
+}
