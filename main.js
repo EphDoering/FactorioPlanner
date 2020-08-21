@@ -2,10 +2,15 @@
 var Rawdata
 var parsedData
 
-fetch('https://gist.githubusercontent.com/Bilka2/6b8a6a9e4a4ec779573ad703d03c1ae7/raw')
-.then(r=>r.text())
+let prefectch=performance.now()
+fetch('raw1.0.0.json')//'https://gist.githubusercontent.com/Bilka2/6b8a6a9e4a4ec779573ad703d03c1ae7/raw')
 .then(r=>{
-    data=r
+    console.log(performance.now()-prefectch)
+    return r.json()
+    })
+.then(r=>{
+    let start=performance.now()
+    `data=r
     .replace(/^[^{]*/,'') //strip leading code
     .replace(/\[("[^"\[\]]+")\]/g,'$1') //strip enclsosing [] around quoted names
     .replace(/(\n\s+)(\w+)\s+=/g,'$1"$2" =') //quote unquated property names
@@ -13,14 +18,22 @@ fetch('https://gist.githubusercontent.com/Bilka2/6b8a6a9e4a4ec779573ad703d03c1ae
     .replace(/(,\s*"off_when_no_fluid_recipe"\s*=\s*\w+\s*)\}/g,'}$1') //fluid box array shouldn't have a named property in it
     .replace(/(-)?1\/0[^\r\n,]*/g,'"$1Infinity"')
     .replace(/\bnil\b/g,'null')
+    let mid=performance.now()
+    let replace=/\{((?:[^={}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*)\}/g
     for(;;){ //convert numerical array tables to arrays
-        data1=data.replace(/\{((?:[^={}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*)\}/g,'[$1]')
+        data1=data.replace(replace,'[$1]')
         if(data1===data) break
         data=data1
     }
+    let late=performance.now()
     Rawdata=data.replace(/ = /g,' : ')
+    let justJson=performance.now()
     parsedData=JSON.parse(Rawdata)
+    let done=performance.now()
+    console.log(start-prefectch,mid-start,late-mid,justJson-late,done-justJson)
+    `;console.log(performance.now()-start)
     populateTable(parsedData)
+    //console.log(performance.now()-done)
     })
 
 function CH(html){
@@ -326,4 +339,19 @@ function restoreOrder(){
         ;(row=parsedData.technology[i].row)
         && row.parentElement.insertBefore(row,null)
     })
+}
+
+
+
+
+
+
+
+function parseBluePrint(BPstring){
+    let ver=BPstring[0]
+    if(+ver!==0){
+        throw new Error("Advanced Bluprint Version")
+    }
+    let BPObj=JSON.parse(pako.inflate(Base64.decode(BPstring.slice(1)),{to:'string'}))
+    var entities=t
 }
