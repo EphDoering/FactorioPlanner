@@ -17,3 +17,20 @@ svg {
   fill: currentColor;
   pointer-events:none;
 }
+
+
+.search_results {
+  display:none;
+  position: absolute;
+  background:white;
+  border:solid 1px black;
+  overflow:auto;
+  max-height:15em;
+  border-radius:1px;
+}
+.search_results>*{
+  border:inherit;
+  border-width: 0 0 1px 0;
+  padding: 1px 3px;
+  margin:0;
+}
