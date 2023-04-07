@@ -2,39 +2,32 @@
 var Rawdata
 var parsedData
 
-let prefectch=performance.now()
+function getNewRaw(){
+    fetch('https://gist.githubusercontent.com/Bilka2/6b8a6a9e4a4ec779573ad703d03c1ae7/raw')
+    .then(r=>r.text())
+    .then(r=>{
+        data=r
+        .replace(/^[^{]*/,'') //strip leading code
+        .replace(/\[("[^"\[\]]+")\]/g,'$1') //strip enclsosing [] around quoted names
+        .replace(/(\n\s+)(\w+)\s+=/g,'$1"$2" =') //quote unquated property names
+        .replace(/\[0\]\s*=\s*/g,'')// :( removing anomolus zero index in lighting
+        .replace(/(,\s*"off_when_no_fluid_recipe"\s*=\s*\w+\s*)\}/g,'}$1') //fluid box array shouldn't have a named property in it
+        .replace(/(-)?1\/0[^\r\n,]*/g,'"$1Infinity"')
+        .replace(/\bnil\b/g,'null')
+        let replace=/\{((?:[^={}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*)\}/g
+        for(;;){ //convert numerical array tables to arrays
+            data1=data.replace(replace,'[$1]')
+            if(data1===data) break
+            data=data1
+        }
+        Rawdata=data.replace(/ = /g,' : ')
+        parsedData=JSON.parse(Rawdata)
+        })
+}
+
 fetch('raw1.0.0.json')//'https://gist.githubusercontent.com/Bilka2/6b8a6a9e4a4ec779573ad703d03c1ae7/raw')
-.then(r=>{
-    console.log(performance.now()-prefectch)
-    return r.json()
-    })
-.then(r=>{
-    let start=performance.now()
-    `data=r
-    .replace(/^[^{]*/,'') //strip leading code
-    .replace(/\[("[^"\[\]]+")\]/g,'$1') //strip enclsosing [] around quoted names
-    .replace(/(\n\s+)(\w+)\s+=/g,'$1"$2" =') //quote unquated property names
-    .replace(/\[0\]\s*=\s*/g,'')// :( removing anomolus zero index in lighting
-    .replace(/(,\s*"off_when_no_fluid_recipe"\s*=\s*\w+\s*)\}/g,'}$1') //fluid box array shouldn't have a named property in it
-    .replace(/(-)?1\/0[^\r\n,]*/g,'"$1Infinity"')
-    .replace(/\bnil\b/g,'null')
-    let mid=performance.now()
-    let replace=/\{((?:[^={}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*\})*)\}/g
-    for(;;){ //convert numerical array tables to arrays
-        data1=data.replace(replace,'[$1]')
-        if(data1===data) break
-        data=data1
-    }
-    let late=performance.now()
-    Rawdata=data.replace(/ = /g,' : ')
-    let justJson=performance.now()
-    parsedData=JSON.parse(Rawdata)
-    let done=performance.now()
-    console.log(start-prefectch,mid-start,late-mid,justJson-late,done-justJson)
-    `;console.log(performance.now()-start)
-    populateTable(parsedData)
-    //console.log(performance.now()-done)
-    })
+.then(r=>r.json())
+.then(gotRawData)
 
 function CH(html){
     var div=document.createElement('div')
@@ -42,6 +35,27 @@ function CH(html){
     return div.firstElementChild
 }
 var sciencePacks=["automation-science-pack","logistic-science-pack","chemical-science-pack","military-science-pack","production-science-pack","utility-science-pack","space-science-pack"]
+
+
+function gotRawData(data){
+    parsedData=data
+    getCrafters(data)
+    populateTable(data)
+}
+var crafters={}
+function getCrafters(data){
+    if(!data || typeof data != 'object'){
+        return
+    }
+    if(data.crafting_speed){
+        crafters[data.name]=data
+        return
+    }
+    for(let kid of Object.getOwnPropertyNames(data)){
+        getCrafters(data[kid])
+    }
+}
+
 
 function populateTable(data){
     var tab=CH(`
@@ -181,10 +195,8 @@ function updateDrag(event){
         var diff=event.pageY-dragoffset
         if(diff>diffLimHigh){
             limited=dragDown()
-            console.log(currentDragIndex)
         }else if(diff<diffLimLow){
             limited=dragUp()
-            console.log(currentDragIndex)
         }else{
             break
         }
@@ -345,13 +357,72 @@ function restoreOrder(){
 
 
 
+function getBP(event){
+    navigator.clipboard.readText()
+    .then(getProductionCapabiltiy)
+    .then(console.log)
+}
+function addCapabilitiesTo(cap1,cap2){
+    cap1.drain+=cap2.drain
+    for(let i in cap2){
+        if(cap1[i]){
+            addCapabilityTo(cap1[i],cap2[i])
+        }else{
+            cap1[i]=Object.assign({},cap2[i])
+        }
+    }
+}
+function addCapabilityTo(cap1,cap2){
+    cap1.speed+=cap2.speed
+    cap1.pollution+=cap2.pollution
+    cap1.power_usage+=cap2.power_usage
+}
+function getProductionCapabiltiy(blueprint){
+    if(typeof blueprint == 'string'){
+        blueprint=parseBluePrintStr(blueprint)
+    }
+    var entities=blueprint.blueprint.entities
+    var capabilities={}
+    Object.defineProperty(capabilities,'drain',{writable:true,value:0})
+    for(let entity of entities){
+        if(!crafters[entity.name]){
+            continue
+        }
+        let crafter=crafters[entity.name]
+        let power_usage=+crafter.energy_usage.slice(0,-2)
+        let power_drain=power_usage*0.03
+        if(crafter.energy_source.drain){
+            power_drain=+crafter.energy_source.drain.slice(0,-2)
+        }
+        capabilities.drain+=power_drain
+        let capability={
+            speed:crafter.crafting_speed,
+            power_usage,
+            pollution:crafter.energy_source.emissions_per_minute || 0
+        }
 
+        let recipe=entity.recipe
+        if(!recipe){
+            let cc=crafter.crafting_categories
+            if(cc.length != 1 || cc[0]!="smelting"){
+                continue
+            }
+            recipe='smelting'
+        }
+        if(capabilities[recipe]){
+            addCapabilityTo(capabilities[recipe],capability)
+        }else{
+            capabilities[recipe]=capability
+        }
+    }
+    return capabilities
+}
 
-function parseBluePrint(BPstring){
+function parseBluePrintStr(BPstring){
     let ver=BPstring[0]
     if(+ver!==0){
         throw new Error("Advanced Bluprint Version")
     }
-    let BPObj=JSON.parse(pako.inflate(Base64.decode(BPstring.slice(1)),{to:'string'}))
-    var entities=t
+    return JSON.parse(pako.inflate(Base64.decode(BPstring.slice(1)),{to:'string'}))
 }
+document.getElementById('BPButton').addEventListener('click',getBP)
